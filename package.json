@@ -1,0 +1,26 @@
+{
+  "name": "bamazon",
+  "version": "1.0.0",
+  "description": "An Amazon-like storefront with a MySQL backend.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quells/ucsd0725-Bamazon.git"
+  },
+  "author": "Kai Wells",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/quells/ucsd0725-Bamazon/issues"
+  },
+  "homepage": "https://github.com/quells/ucsd0725-Bamazon#readme",
+  "dependencies": {
+    "cli-color": "^1.2.0",
+    "inquirer": "^3.3.0",
+    "mysql": "^2.15.0",
+    "table": "^4.0.2"
+  }
+}
