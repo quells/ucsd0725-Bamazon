@@ -11,6 +11,7 @@ class Customer {
     addToCart(quantity, id, name, price) {
         if (this.cart[id] === undefined) {
             this.cart[id] = {
+                id: id,
                 quantity: quantity,
                 name: name,
                 price: price
@@ -69,7 +70,12 @@ class Customer {
                     this.askToAddToCart()
                     break
                 case "Remove from Cart":
-                    this.askToRemoveFromCart()
+                    if (Object.keys(this.cart).length < 1) {
+                        console.log("Your cart is empty.")
+                        this.askWhatToDo()
+                    } else {
+                        this.askToRemoveFromCart()
+                    }
                     break
                 case "View Cart":
                     console.log(this.totalBill().receipt)
@@ -124,7 +130,27 @@ class Customer {
 
     askToRemoveFromCart() {
         var items = Object.keys(this.cart).map(id => this.cart[id])
-        // TODO: display options and handle removal
+        inq.prompt([{
+            type: "list",
+            name: "product_name",
+            message: "Which item would you like to remove?",
+            choices: items.map(i => i.name)
+        }])
+        .then(answer => {
+            var item = items.filter(i => i.name === answer.product_name)[0]
+            inq.prompt([{
+                type: "input",
+                name: "quantity",
+                message: "How many would you like to remove?",
+                validate: function(input) {
+                    return Number(input) >= 0 && Number(input) <= item.quantity
+                }
+            }])
+            .then(answer => {
+                this.removeFromCart(answer.quantity, item.id)
+                this.askWhatToDo()
+            })
+        })
     }
 }
 
