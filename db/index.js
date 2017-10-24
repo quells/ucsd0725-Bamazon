@@ -97,4 +97,37 @@ module.exports = {
         .catch(console.error)
         .then(() => client.Disconnect())
     },
+    GetDepartmentSales: function() {
+        var client = new Client(mysqlDatabaseName)
+        return client.Connect()
+        .then(() => client.Query(`
+            SELECT d.department_id, d.department_name, d.overhead_costs,
+            coalesce(s.total_sales, 0) AS total_sales,
+            coalesce(s.total_sales, 0) - d.overhead_costs AS profits
+            FROM departments AS d
+            LEFT JOIN (
+                SELECT department_id, sum(product_sales) as total_sales
+                FROM products
+                GROUP BY department_id
+            ) AS s
+            ON d.department_id = s.department_id
+            ORDER BY d.department_id
+        `))
+        .catch(console.error)
+        .then(results => {
+            client.Disconnect()
+            return results
+        })
+    },
+    CreateDepartment: function(department_name, overhead) {
+        var client = new Client(mysqlDatabaseName)
+        return client.Connect()
+        .then(() => client.Query(`
+            INSERT INTO departments
+            (department_name, overhead_costs)
+            VALUE (?, ?)
+        `, [department_name, overhead]))
+        .catch(console.error)
+        .then(() => client.Disconnect())
+    },
 }
