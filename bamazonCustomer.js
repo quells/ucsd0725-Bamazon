@@ -76,9 +76,11 @@ class Customer {
                     break
                 case "Checkout":
                     var p = Promise.resolve()
-                    for (var id in this.cart) {
+                    // usual async issue where loop variables cannot be used in inner scope
+                    Object.keys(this.cart).forEach(id => {
+                        // Future improvement: coalesce database connections to reduce latency
                         p = p.then(() => db.SellProduct(id, this.cart[id].quantity))
-                    }
+                    })
                     p = p.then(() => console.log(`Your total is $${this.totalBill().amount.toFixed(2)}. Thank you, come again!`))
                     break
                 case "Exit":
