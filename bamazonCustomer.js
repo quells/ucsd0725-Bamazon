@@ -1,7 +1,8 @@
 const inq = require("inquirer")
 const table = require("table")
-const db = require("./db")
 const color = require("cli-color")
+const db = require("./db")
+const utilities = require ("./utilities")
 
 class Customer {
     constructor() {
@@ -84,7 +85,7 @@ class Customer {
                 case "Checkout":
                     var p = Promise.resolve()
                     for (var id in this.cart) {
-                        p = p.then(() => db.DepleteStock(id, this.cart[id].quantity))
+                        p = p.then(() => db.SellProduct(id, this.cart[id].quantity))
                     }
                     p = p.then(() => console.log(`Your total is $${this.totalBill().amount.toFixed(2)}. Thank you, come again!`))
                     break
@@ -111,9 +112,7 @@ class Customer {
                 type: "input",
                 name: "quantity",
                 message: "How many do you want?",
-                validate: function(input) {
-                    return Number(input) > 0
-                }
+                validate: utilities.IsANumber
             }])
             .then(answers => {
                 var item = items.filter(i => i.item_id == answers.id)[0]
@@ -159,16 +158,9 @@ function displayAvailableItems() {
     .then(results => {
         var items = results.map(r => [r.item_id, r.product_name, `$${r.price.toFixed(2)}`])
         var data = [["ID", "Name", "Price"]].concat(items)
-        var tabulated = table.table(data, {
-            border: table.getBorderCharacters(`void`),
-            drawJoin: () => { return false },
-            columnDefault: {
-                paddingLeft: 0,
-                paddingRight: 1,
-                alignment: "left"
-            },
-            columns: { 2: {alignment: "right"} },
-        })
+        var tableOptions = utilities.TableOptions()
+        tableOptions.columns = { 2: {alignment: "right"} }
+        var tabulated = table.table(data, tableOptions)
         console.log("Items for sale:")
         console.log(tabulated)
         return results
