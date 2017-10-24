@@ -20,6 +20,14 @@ class Customer {
         }
     }
 
+    removeFromCart(quantity, id) {
+        if (this.cart[id] === undefined) return
+        this.cart[id].quantity -= quantity
+        if (this.cart[id].quantity <= 0) {
+            delete this.cart[id]
+        }
+    }
+
     totalBill() {
         var sum = 0
         var receipt = [
@@ -53,12 +61,15 @@ class Customer {
             type: "list",
             name: "action",
             message: "What would you like to do?",
-            choices: ["Add to Cart", `View Cart`, "Checkout", "Exit"]
+            choices: ["Add to Cart", "Remove from Cart", "View Cart", "Checkout", "Exit"]
         }])
         .then(answer => {
             switch (answer.action) {
                 case "Add to Cart":
                     this.askToAddToCart()
+                    break
+                case "Remove from Cart":
+                    this.askToRemoveFromCart()
                     break
                 case "View Cart":
                     console.log(this.totalBill().receipt)
@@ -109,6 +120,11 @@ class Customer {
                 this.askWhatToDo()
             })
         })
+    }
+
+    askToRemoveFromCart() {
+        var items = Object.keys(this.cart).map(id => this.cart[id])
+        // TODO: display options and handle removal
     }
 }
 
