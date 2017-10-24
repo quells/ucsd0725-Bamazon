@@ -32,9 +32,7 @@ class Customer {
 
     totalBill() {
         var sum = 0
-        var receipt = [
-            ["Quantity", "Item", "Unit Price", "Total Price"]
-        ]
+        var receipt = [["Quantity", "Item", "Unit Price", "Total Price"]]
         for (var id in this.cart) {
             var item = this.cart[id]
             var itemTotal = item.quantity * item.price
@@ -42,16 +40,10 @@ class Customer {
             receipt.push([item.quantity, item.name, item.price.toFixed(2), itemTotal.toFixed(2)])
         }
         receipt.push(["", "", "", sum.toFixed(2)])
-        receipt = table.table(receipt, {
-            border: table.getBorderCharacters(`void`),
-            drawJoin: () => { return false },
-            columnDefault: {
-                paddingLeft: 0,
-                paddingRight: 1,
-                alignment: "right"
-            },
-            columns: { 1: {alignment: "center"} },
-        })
+        var tableOptions = utilities.TableOptions()
+        tableOptions.columnDefault.alignment = "right"
+        tableOptions.columns = { 1: {alignment: "left"} }
+        receipt = table.table(receipt, tableOptions)
         return {
             amount: sum,
             receipt: receipt
