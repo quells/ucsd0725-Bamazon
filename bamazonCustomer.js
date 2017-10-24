@@ -61,13 +61,18 @@ class Customer {
             switch (answer.action) {
                 case "Add to Cart":
                     this.askToAddToCart()
+                    .then(item => this.addToCart(item.quantity, item.id, item.name, item.price))
+                    .catch(err => console.log(color.red(err))) // Insufficient inventory
+                    .then(() => this.askWhatToDo())
                     break
                 case "Remove from Cart":
                     if (Object.keys(this.cart).length < 1) {
-                        console.log("Your cart is empty.")
+                        console.log(color.red("Your cart is empty."))
                         this.askWhatToDo()
                     } else {
                         this.askToRemoveFromCart()
+                        .then(item => this.removeFromCart(item.quantity, item.id))
+                        .then(() => this.askWhatToDo())
                     }
                     break
                 case "View Cart":
@@ -93,7 +98,7 @@ class Customer {
     }
 
     askToAddToCart() {
-        displayAvailableItems()
+        return displayAvailableItems()
         .then(items => {
             return inq.prompt([{
                 type: "input",
@@ -120,16 +125,20 @@ class Customer {
                 if (quantity + alreadyInCart > item.stock_quantity) {
                     return Promise.reject(`The store does not have enough ${item.product_name} to fulfill this order.`)
                 } else {
-                    this.addToCart(quantity, item.item_id, item.product_name, item.price)
+                    return Promise.resolve({
+                        quantity: quantity,
+                        id: item.item_id,
+                        name: item.product_name,
+                        price: item.price
+                    })
                 }
-                this.askWhatToDo()
             })
         })
     }
 
     askToRemoveFromCart() {
         var items = Object.keys(this.cart).map(id => this.cart[id])
-        inq.prompt([{
+        return inq.prompt([{
             type: "list",
             name: "product_name",
             message: "Which item would you like to remove?",
@@ -137,7 +146,7 @@ class Customer {
         }])
         .then(answer => {
             var item = items.filter(i => i.name === answer.product_name)[0]
-            inq.prompt([{
+            return inq.prompt([{
                 type: "input",
                 name: "quantity",
                 message: "How many would you like to remove?",
@@ -146,8 +155,10 @@ class Customer {
                 }
             }])
             .then(answer => {
-                this.removeFromCart(answer.quantity, item.id)
-                this.askWhatToDo()
+                return {
+                    quantity: answer.quantity,
+                    id: item.id
+                }
             })
         })
     }
