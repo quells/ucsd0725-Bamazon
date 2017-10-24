@@ -12,7 +12,7 @@ class Manager {
             type: "list",
             name: "action",
             message: "What would you like to do?",
-            choices: ["View Products", "View Low Inventory Products", "Add to Inventory", "Add New Product", "Exit"]
+            choices: ["View Products", "View Low Inventory Products", "Add to Inventory", "Add New Product", "Change Product Price", "Exit"]
         }])
         .then(answer => {
             switch (answer.action) {
@@ -27,6 +27,9 @@ class Manager {
                     break
                 case "Add to Inventory":
                     this.askToAddToInventory()
+                    break
+                case "Change Product Price":
+                    this.askToChangeProductPrice()
                     break
                 case "Add New Product":
                     this.askToCreateNewProduct()
@@ -94,6 +97,28 @@ class Manager {
             .then(answers => {
                 var department = results.filter(r => r.department_name === answers.department)[0]
                 db.CreateProduct(answers.product_name, department.department_id, Number(answers.price))
+                .then(() => this.askWhatToDo())
+            })
+        })
+    }
+
+    askToChangeProductPrice() {
+        db.GetProducts()
+        .then(results => {
+            inq.prompt([{
+                type: "list",
+                name: "product_name",
+                message: "Which product do you want to change?",
+                choices: results.map(r => r.product_name)
+            }, {
+                type: "input",
+                name: "price",
+                message: "What should the new price be?",
+                validate: utilities.IsANumber
+            }])
+            .then(answers => {
+                var item = results.filter(r => r.product_name === answers.product_name)[0]
+                db.ChangeProductPrice(item.item_id, answers.price)
                 .then(() => this.askWhatToDo())
             })
         })

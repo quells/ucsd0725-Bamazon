@@ -85,5 +85,16 @@ module.exports = {
         `, [product_name, department_id, price]))
         .catch(console.error)
         .then(() => client.Disconnect())
-    }
+    },
+    ChangeProductPrice: function(item_id, newPrice) {
+        var client = new Client(mysqlDatabaseName)
+        return client.Connect()
+        .then(() => client.Query(`
+            UPDATE products SET
+            price = ?
+            WHERE item_id = ?
+        `, [newPrice, item_id]))
+        .catch(console.error)
+        .then(() => client.Disconnect())
+    },
 }
