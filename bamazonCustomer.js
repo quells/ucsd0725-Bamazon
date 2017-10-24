@@ -111,8 +111,14 @@ class Customer {
             .then(answers => {
                 var item = items.filter(i => i.item_id == answers.id)[0]
                 var quantity = Math.floor(Number(answers.quantity))
-                if (quantity > item.stock_quantity) {
-                    console.log(color.red(`The store does not have enough ${item.product_name} to fulfill this order.`))
+                var alreadyInCart = 0
+                try {
+                    alreadyInCart = this.cart[answers.id].quantity
+                } catch (err) {
+                    // item id not yet in cart
+                }
+                if (quantity + alreadyInCart > item.stock_quantity) {
+                    return Promise.reject(`The store does not have enough ${item.product_name} to fulfill this order.`)
                 } else {
                     this.addToCart(quantity, item.item_id, item.product_name, item.price)
                 }
