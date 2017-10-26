@@ -30,4 +30,6 @@ effect is displayed.
 Updates the database, subtracting from the stock quantity and adding to the
 product sales. Exits from the program with a message about the bill total.
 
-![View Cart](../screenshots/07%20Checkout.png)
+If the user selects `Exit` instead, the database is not updated.
+
+![Checkout](../screenshots/07%20Checkout.png)
