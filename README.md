@@ -25,3 +25,5 @@ Select `Exit` to return to the command line.
 Start app with `npm start` to show the different modes available. You can also load a mode directly, for example with `node bamazonCustomer.js`.
 
 ![Mode Menu](screenshots/01%20Database.png)
+
+- [Customer](readme/customer.md)
