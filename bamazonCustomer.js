@@ -32,9 +32,7 @@ class Customer {
 
     totalBill() {
         var sum = 0
-        var receipt = [
-            ["Quantity", "Item", "Unit Price", "Total Price"]
-        ]
+        var receipt = [["Quantity", "Item", "Unit Price", "Total Price"]]
         for (var id in this.cart) {
             var item = this.cart[id]
             var itemTotal = item.quantity * item.price
@@ -42,16 +40,10 @@ class Customer {
             receipt.push([item.quantity, item.name, item.price.toFixed(2), itemTotal.toFixed(2)])
         }
         receipt.push(["", "", "", sum.toFixed(2)])
-        receipt = table.table(receipt, {
-            border: table.getBorderCharacters(`void`),
-            drawJoin: () => { return false },
-            columnDefault: {
-                paddingLeft: 0,
-                paddingRight: 1,
-                alignment: "right"
-            },
-            columns: { 1: {alignment: "center"} },
-        })
+        var tableOptions = utilities.TableOptions()
+        tableOptions.columnDefault.alignment = "right"
+        tableOptions.columns = { 1: {alignment: "left"} }
+        receipt = table.table(receipt, tableOptions)
         return {
             amount: sum,
             receipt: receipt
@@ -69,13 +61,18 @@ class Customer {
             switch (answer.action) {
                 case "Add to Cart":
                     this.askToAddToCart()
+                    .then(item => this.addToCart(item.quantity, item.id, item.name, item.price))
+                    .catch(err => console.log(color.red(err))) // Insufficient inventory
+                    .then(() => this.askWhatToDo())
                     break
                 case "Remove from Cart":
                     if (Object.keys(this.cart).length < 1) {
-                        console.log("Your cart is empty.")
+                        console.log(color.red("Your cart is empty."))
                         this.askWhatToDo()
                     } else {
                         this.askToRemoveFromCart()
+                        .then(item => this.removeFromCart(item.quantity, item.id))
+                        .then(() => this.askWhatToDo())
                     }
                     break
                 case "View Cart":
@@ -84,9 +81,11 @@ class Customer {
                     break
                 case "Checkout":
                     var p = Promise.resolve()
-                    for (var id in this.cart) {
+                    // usual async issue where loop variables cannot be used in inner scope
+                    Object.keys(this.cart).forEach(id => {
+                        // Future improvement: coalesce database connections to reduce latency
                         p = p.then(() => db.SellProduct(id, this.cart[id].quantity))
-                    }
+                    })
                     p = p.then(() => console.log(`Your total is $${this.totalBill().amount.toFixed(2)}. Thank you, come again!`))
                     break
                 case "Exit":
@@ -99,7 +98,7 @@ class Customer {
     }
 
     askToAddToCart() {
-        displayAvailableItems()
+        return displayAvailableItems()
         .then(items => {
             return inq.prompt([{
                 type: "input",
@@ -117,19 +116,29 @@ class Customer {
             .then(answers => {
                 var item = items.filter(i => i.item_id == answers.id)[0]
                 var quantity = Math.floor(Number(answers.quantity))
-                if (quantity > item.stock_quantity) {
-                    console.log(color.red(`The store does not have enough ${item.product_name} to fulfill this order.`))
-                } else {
-                    this.addToCart(quantity, item.item_id, item.product_name, item.price)
+                var alreadyInCart = 0
+                try {
+                    alreadyInCart = this.cart[answers.id].quantity
+                } catch (err) {
+                    // item id not yet in cart
                 }
-                this.askWhatToDo()
+                if (quantity + alreadyInCart > item.stock_quantity) {
+                    return Promise.reject(`The store does not have enough ${item.product_name} to fulfill this order.`)
+                } else {
+                    return Promise.resolve({
+                        quantity: quantity,
+                        id: item.item_id,
+                        name: item.product_name,
+                        price: item.price
+                    })
+                }
             })
         })
     }
 
     askToRemoveFromCart() {
         var items = Object.keys(this.cart).map(id => this.cart[id])
-        inq.prompt([{
+        return inq.prompt([{
             type: "list",
             name: "product_name",
             message: "Which item would you like to remove?",
@@ -137,7 +146,7 @@ class Customer {
         }])
         .then(answer => {
             var item = items.filter(i => i.name === answer.product_name)[0]
-            inq.prompt([{
+            return inq.prompt([{
                 type: "input",
                 name: "quantity",
                 message: "How many would you like to remove?",
@@ -146,8 +155,10 @@ class Customer {
                 }
             }])
             .then(answer => {
-                this.removeFromCart(answer.quantity, item.id)
-                this.askWhatToDo()
+                return {
+                    quantity: answer.quantity,
+                    id: item.id
+                }
             })
         })
     }

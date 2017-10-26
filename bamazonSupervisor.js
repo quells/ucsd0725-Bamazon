@@ -28,7 +28,7 @@ class Supervisor {
                     console.log("Goodbye!")
                     break
                 default:
-                    console.error("unhandled manager action")
+                    console.error("unhandled supervisor action")
             }
         })
     }
